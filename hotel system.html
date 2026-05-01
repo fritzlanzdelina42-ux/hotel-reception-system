@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hotel Reception System</title>
+  <link rel="stylesheet" href="hotel system.css">
+</head>
+<body>
+
+  <!-- Auth Theme Toggle -->
+  <button class="theme-toggle auth-theme-toggle" onclick="toggleTheme()">
+    <span class="theme-toggle-icon">☾</span>
+    <span class="theme-toggle-text">Dark</span>
+  </button>
+
+  <!-- Auth Section -->
+  <div id="authSection" class="auth-wrapper">
+    <div class="auth-box">
+      <div class="brand-mark">H</div>
+      <h2 id="authTitle">Sign In</h2>
+      <p class="auth-copy">Welcome to Hotel Reception System</p>
+      <input id="username" type="text" placeholder="Username" autocomplete="username">
+      <input id="password" type="password" placeholder="Password" autocomplete="current-password">
+      <button id="authAction" onclick="submitAuth()">Login</button>
+      <div class="auth-footer">
+        <button id="authToggle" class="link-button" onclick="toggleAuthMode()">Create account</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Landing Page -->
+  <div id="landingSection" class="hidden">
+
+    <nav class="lp-nav">
+      <div class="lp-nav-brand">
+        <div class="brand-mark small">H</div>
+        <span>HorizonStay</span>
+      </div>
+      <div class="lp-nav-actions">
+        <button class="lp-theme-btn" onclick="toggleTheme()">
+          <span class="theme-toggle-icon">☾</span>
+          <span class="theme-toggle-text">Dark</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="lp-hero">
+      <div class="lp-hero-text">
+        <div class="lp-pill">✦ Premium Hotel Management</div>
+        <h1>Where Every Stay<br>Becomes a <span class="lp-gradient-text">Story</span></h1>
+        <p class="lp-lead">HorizonStay gives your front desk team the tools to deliver seamless, memorable experiences — from first booking to final checkout.</p>
+        <div class="lp-cta-row">
+          <button class="lp-btn-solid" onclick="showDashboard()">Enter Dashboard →</button>
+          <button class="lp-btn-outline" onclick="document.getElementById('lp-features').scrollIntoView({behavior:'smooth'})">Explore Features ↓</button>
+        </div>
+        <div class="lp-stats-row">
+          <div class="lp-stat"><strong>8</strong><span>Rooms</span></div>
+          <div class="lp-stat-sep"></div>
+          <div class="lp-stat"><strong>3</strong><span>Room Classes</span></div>
+          <div class="lp-stat-sep"></div>
+          <div class="lp-stat"><strong>24/7</strong><span>Front Desk</span></div>
+        </div>
+      </div>
+      <div class="lp-hero-img-wrap">
+        <img src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=90" alt="VIP Suite">
+        <div class="lp-img-chip">
+          <span>⭐</span>
+          <div>
+            <b>VIP Suite</b>
+            <small>From ₱8,500 / night</small>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section class="lp-features-section" id="lp-features">
+      <div class="lp-sec-head">
+        <div class="lp-pill">✦ Features</div>
+        <h2>Everything You Need at the Front Desk</h2>
+        <p>Powerful tools designed to make hotel management effortless and professional.</p>
+      </div>
+      <div class="lp-feat-grid">
+        <div class="lp-feat-card">
+          <div class="lp-feat-icon" style="background:rgba(59,130,246,0.15);color:#3b82f6">🛏</div>
+          <h3>Room Management</h3>
+          <p>View all 8 rooms at a glance. Filter by type, status, or guest name. Know exactly what's available in seconds.</p>
+        </div>
+        <div class="lp-feat-card">
+          <div class="lp-feat-icon" style="background:rgba(20,184,166,0.15);color:#14b8a6">📋</div>
+          <h3>Smart Reservations</h3>
+          <p>Create, edit, and cancel reservations with full guest details — name, phone, email, check-in and check-out times.</p>
+        </div>
+        <div class="lp-feat-card">
+          <div class="lp-feat-icon" style="background:rgba(245,158,11,0.15);color:#f59e0b">💳</div>
+          <h3>Digital Payments</h3>
+          <p>Accept GCash and Maya payments at check-in. Payment method is recorded and shown on every receipt.</p>
+        </div>
+        <div class="lp-feat-card">
+          <div class="lp-feat-icon" style="background:rgba(139,92,246,0.15);color:#8b5cf6">🧾</div>
+          <h3>Instant Receipts</h3>
+          <p>Auto-generated checkout receipts with full stay summary — nights, rate, total charge, and payment method.</p>
+        </div>
+        <div class="lp-feat-card">
+          <div class="lp-feat-icon" style="background:rgba(16,185,129,0.15);color:#10b981">📊</div>
+          <h3>Live Dashboard</h3>
+          <p>Real-time stats on occupancy, revenue, average stay length, and available rooms — all in one view.</p>
+        </div>
+        <div class="lp-feat-card">
+          <div class="lp-feat-icon" style="background:rgba(239,68,68,0.15);color:#ef4444">🌙</div>
+          <h3>Dark &amp; Light Mode</h3>
+          <p>Switch between dark and light themes anytime. Your preference is saved automatically across sessions.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Room Classes -->
+    <section class="lp-rooms-section">
+      <div class="lp-sec-head">
+        <div class="lp-pill">✦ Accommodations</div>
+        <h2>Three Classes of Comfort</h2>
+        <p>From cozy standard rooms to lavish VIP suites — a room for every guest.</p>
+      </div>
+      <div class="lp-rooms-grid">
+        <div class="lp-room-card">
+          <img src="https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=900&q=90" alt="VIP Suite">
+          <div class="lp-room-overlay">
+            <span class="lp-room-tag lp-tag-vip">VIP</span>
+            <h3>VIP Suites</h3>
+            <p>Ocean View • King Bed • Pool Access • Room Service</p>
+            <div class="lp-room-price">₱8,500 <span>/ night</span></div>
+          </div>
+        </div>
+        <div class="lp-room-card">
+          <img src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=900&q=90" alt="High Class">
+          <div class="lp-room-overlay">
+            <span class="lp-room-tag lp-tag-high">HIGH CLASS</span>
+            <h3>High Class Rooms</h3>
+            <p>City View • Queen Bed • Smart TV • Coffee Maker</p>
+            <div class="lp-room-price">₱5,500 <span>/ night</span></div>
+          </div>
+        </div>
+        <div class="lp-room-card">
+          <img src="https://images.unsplash.com/photo-1631049552057-403cdb8f0658?auto=format&fit=crop&w=900&q=90" alt="Standard">
+          <div class="lp-room-overlay">
+            <span class="lp-room-tag lp-tag-std">STANDARD</span>
+            <h3>Standard Rooms</h3>
+            <p>Standard Bed • TV • WiFi • Clean Bathroom</p>
+            <div class="lp-room-price">₱3,200 <span>/ night</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Banner -->
+    <section class="lp-cta-section">
+      <h2>Ready to Manage Your Hotel?</h2>
+      <p>Your front desk is one click away. Everything is set up and ready to go.</p>
+      <button class="lp-btn-solid" onclick="showDashboard()">Open Dashboard →</button>
+    </section>
+
+    <!-- Footer -->
+    <footer class="lp-footer">
+      <div class="lp-footer-brand">
+        <div class="brand-mark small">H</div>
+        <span>HorizonStay Hotel System</span>
+      </div>
+      <p>Built for professional hotel front desk management.</p>
+    </footer>
+
+  </div>
+
+  <!-- Dashboard Section -->
+  <div id="dashboardSection" class="hidden">
+    <div class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-mark small">H</div>
+        <h3>Hotel System</h3>
+      </div>
+      <div class="sidebar-label">Navigation</div>
+      <button onclick="showDashboard()">🏠 Dashboard</button>
+      <div class="sidebar-label">Room Types</div>
+      <button onclick="showRoomCategory('vip')">⭐ VIP Suites</button>
+      <button onclick="showRoomCategory('high')">🏨 High Class</button>
+      <button onclick="showRoomCategory('low')">🛏 Standard</button>
+      <div class="sidebar-label">Management</div>
+      <button onclick="showBulkCancelModal()">⚙ Bulk Actions</button>
+      <div class="sidebar-spacer"></div>
+      <button class="sidebar-back-btn" onclick="showLanding()">&#8592;</button>
+      <button onclick="logout()">🚪 Logout</button>
+    </div>
+
+    <div class="main">
+      <!-- Hero -->
+      <div class="hero">
+        <h1>Hotel Reception</h1>
+        <p id="welcomeUser">Hotel front desk</p>
+        <p class="hero-note">Manage rooms, reservations, and guests from one place.</p>
+        <div class="cards">
+          <div class="card primary">
+            <div class="card-icon">🏨</div>
+            <div class="card-content">
+              <div class="card-value" id="total">0</div>
+              <div class="card-label">Total Rooms</div>
+            </div>
+          </div>
+          <div class="card warning">
+            <div class="card-icon">👤</div>
+            <div class="card-content">
+              <div class="card-value" id="occ">0</div>
+              <div class="card-label">Occupied</div>
+            </div>
+          </div>
+          <div class="card success">
+            <div class="card-icon">✅</div>
+            <div class="card-content">
+              <div class="card-value" id="avail">0</div>
+              <div class="card-label">Available</div>
+            </div>
+          </div>
+          <div class="card info">
+            <div class="card-icon">💰</div>
+            <div class="card-content">
+              <div class="card-value" id="revenue">0</div>
+              <div class="card-label">Revenue (PHP)</div>
+            </div>
+          </div>
+          <div class="card primary">
+            <div class="card-icon">🌙</div>
+            <div class="card-content">
+              <div class="card-value" id="avgStay">0</div>
+              <div class="card-label">Avg Stay (nights)</div>
+            </div>
+          </div>
+          <div class="card success">
+            <div class="card-icon">📊</div>
+            <div class="card-content">
+              <div class="card-value" id="occupancy">0%</div>
+              <div class="card-label">Occupancy Rate</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dashboard Grid -->
+      <div class="dashboard-grid">
+        <div class="dashboard-card full-width">
+          <h3>👥 Current Guests</h3>
+          <div class="guest-list" id="guestsList">
+            <div class="empty-state">No guests currently checked in</div>
+          </div>
+        </div>
+        <div class="dashboard-card">
+          <h3>📋 Recent Activity</h3>
+          <div class="activity-list" id="recentActivity">
+            <div class="empty-state">No recent activity</div>
+          </div>
+        </div>
+        <div class="dashboard-card">
+          <h3>📜 Booking History</h3>
+          <div id="historyList">
+            <div class="empty-state">No completed or cancelled bookings yet</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rooms Section -->
+  <div id="roomsSection" class="hidden">
+    <div class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-mark small">H</div>
+        <h3>Hotel System</h3>
+      </div>
+      <div class="sidebar-label">Navigation</div>
+      <button onclick="showDashboard()">🏠 Dashboard</button>
+      <div class="sidebar-label">Room Types</div>
+      <button onclick="showRoomCategory('vip')">⭐ VIP Suites</button>
+      <button onclick="showRoomCategory('high')">🏨 High Class</button>
+      <button onclick="showRoomCategory('low')">🛏 Standard</button>
+      <div class="sidebar-label">Management</div>
+      <button onclick="showBulkCancelModal()">⚙ Bulk Actions</button>
+      <div class="sidebar-spacer"></div>
+      <button class="sidebar-back-btn" onclick="showLanding()">&#8592;</button>
+      <button onclick="logout()">🚪 Logout</button>
+    </div>
+
+    <div class="main">
+      <div class="section">
+        <h2>🛏 Rooms</h2>
+        <div class="filter-bar">
+          <input id="roomSearch" type="text" placeholder="Search by room, guest, type...">
+          <select id="roomTypeFilter">
+            <option value="all">All Types</option>
+            <option value="vip">VIP Suite</option>
+            <option value="high">High Class</option>
+            <option value="low">Standard</option>
+          </select>
+          <select id="roomStatusFilter">
+            <option value="all">All Status</option>
+            <option value="available">Available</option>
+            <option value="occupied">Occupied</option>
+          </select>
+          <button onclick="clearRoomFilters()">Clear</button>
+        </div>
+        <p class="filter-summary" id="roomResultsCount">8 room(s) shown</p>
+        <div class="room-grid" id="roomsContainer"></div>
+      </div>
+
+      <div id="roomDetails" class="section">
+        <div id="roomDetailsContent">
+          <div class="reservation-board">
+            <h3>Choose a room type above or use the filters below.</h3>
+            <p class="helper-copy">You can search by room number, room class, guest name, or availability.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Room Details Modal -->
+  <div id="roomDetailsModal" class="modal hidden">
+    <div class="modal-content reservation-board">
+      <div id="roomDetailsContentModal"></div>
+    </div>
+  </div>
+
+  <!-- Booking Modal (legacy) -->
+  <div id="bookingModal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Book Room <span id="modalRoom"></span></h3>
+      <input id="modalName" placeholder="Guest Name">
+      <input id="modalCheckIn" type="date">
+      <input id="modalCheckOut" type="date">
+      <div class="board-actions">
+        <button onclick="bookModal()">Confirm</button>
+        <button class="secondary" onclick="closeModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bulk Actions Modal -->
+  <div id="bulkModal" class="modal hidden">
+    <div class="modal-content">
+      <h3>⚙ Bulk Actions</h3>
+      <p class="modal-subtitle">Manage all reservations at once.</p>
+      <div class="bulk-actions">
+        <button class="bulk-btn" onclick="checkoutAllGuests()">
+          <span style="font-size:1.5rem">🚪</span>
+          Checkout All Guests
+        </button>
+        <button class="bulk-btn" onclick="cancelAllReservations()">
+          <span style="font-size:1.5rem">❌</span>
+          Cancel All Reservations
+        </button>
+        <button class="bulk-btn" onclick="clearAllData()">
+          <span style="font-size:1.5rem">🗑</span>
+          Clear All Data
+        </button>
+      </div>
+      <div class="board-actions">
+        <button class="secondary" onclick="closeBulkModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Receipt Modal -->
+  <div id="receiptModal" class="modal hidden">
+    <div class="modal-content">
+      <h3>🧾 Checkout Receipt</h3>
+      <div id="receiptContent"></div>
+      <div class="board-actions">
+        <button onclick="closeReceiptModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="hotel system.js"></script>
+</body>
+</html>
