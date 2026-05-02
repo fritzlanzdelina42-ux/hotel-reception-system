@@ -304,15 +304,23 @@ function handleRoomClick(room) {
       '<h3>Edit Reservation - Room ' + room + '</h3></div>' +
       '<div class="room-details-info">' +
       '<p><strong>Type:</strong> ' + roomTypeText + '</p>' +
-      '<p><strong>Price:</strong> ' + formatPeso(getPrice(room)) + ' / night</p></div>' +
+      '<p><strong>Rate:</strong> ' + formatPeso(getPrice(room)) + ' / night</p></div>' +
       '<input id="editName" placeholder="Guest Name" value="' + guest.name + '">' +
       '<input id="editPhone" placeholder="Phone Number" value="' + (guest.phone || "") + '">' +
       '<input id="editEmail" type="email" placeholder="Email Address" value="' + (guest.email || "") + '">' +
-      '<input id="editCheckIn" type="date" value="' + guest.checkIn + '">' +
-      '<input id="editCheckOut" type="date" value="' + guest.checkOut + '">' +
+      '<div class="date-row">' +
+      '<div><label style="font-size:0.72rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:4px">Check-in</label>' +
+      '<input id="editCheckIn" type="date" value="' + guest.checkIn + '" onchange="updateEditSummary(' + room + ')"></div>' +
+      '<div><label style="font-size:0.72rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:4px">Check-out</label>' +
+      '<input id="editCheckOut" type="date" value="' + guest.checkOut + '" onchange="updateEditSummary(' + room + ')"></div>' +
+      '</div>' +
+      '<div class="edit-price-summary" id="editPriceSummary"></div>' +
       '<div class="board-actions">' +
       '<button class="primary" onclick="updateReservation(' + room + ')">Save Changes</button>' +
       '<button class="secondary" onclick="cancelEdit()">Cancel Edit</button></div>';
+
+    // Trigger initial summary render
+    updateEditSummary(room);
   } else if (guest) {
     roomDetailsContentModal.innerHTML =
       '<button class="modal-back-btn" onclick="closeRoomDetailsModal()">&#8592;</button>' +
@@ -328,7 +336,11 @@ function handleRoomClick(room) {
       '<p><strong>Check-out:</strong> ' + guest.checkOut + ' ' + guest.checkOutTime + '</p>' +
       '<p><strong>Type:</strong> ' + roomTypeText + '</p>' +
       '<p><strong>Price:</strong> ' + formatPeso(getPrice(room)) + ' / night</p>' +
-      '<p><strong>Payment:</strong> ' + (guest.paymentMethod ? guest.paymentMethod.toUpperCase() : 'N/A') + '</p></div>' +
+      '<p><strong>Payment:</strong> ' + (guest.paymentMethod ? guest.paymentMethod.toUpperCase() : 'N/A') + '</p>' +
+      (guest.halfPayment ? '<p><strong>Half Payment:</strong> <span style="color:var(--green)">' + formatPeso(guest.halfPayment) + ' ✓ Paid</span></p>' : '') +
+      (guest.balanceDue ? '<p><strong>Balance Due:</strong> <span style="color:var(--gold)">' + formatPeso(guest.balanceDue) + '</span></p>' : '') +
+      (guest.promoCode ? '<p><strong>Promo:</strong> ' + guest.promoCode + ' (-' + formatPeso(guest.discount || 0) + ')</p>' : '') +
+      '</div>' +
       '<div class="board-actions">' +
       '<button class="primary" onclick="startEdit(' + room + ')">Edit Reservation</button>' +
       '<button class="warning" onclick="cancelReservation(' + room + ')">Cancel Reservation</button>' +
@@ -357,6 +369,9 @@ function handleRoomClick(room) {
       '<div><label for="detailCheckOutTime">Check-out Time</label><input id="detailCheckOutTime" type="time" value="12:00" onchange="updateBookingDuration()"></div>' +
       '</div>' +
       '<div class="duration-info" id="bookingDuration">Duration: set check-in and check-out first</div>' +
+      '<label>Promo Code <span style="color:var(--text3);font-weight:400">(optional)</span></label>' +
+      '<input id="detailPromoCode" placeholder="Enter promo code" style="margin-bottom:12px" oninput="previewPromo()">' +
+      '<div id="promoPreview" style="display:none;padding:8px 12px;border-radius:var(--r-sm);background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:var(--green);font-size:0.84rem;margin-bottom:12px;"></div>' +
       '<label>Payment Method</label>' +
       '<div class="payment-options">' +
       '<label class="payment-option" onclick="selectPayment(this, \'gcash\')">' +
@@ -381,6 +396,35 @@ function handleRoomClick(room) {
   roomDetailsModal.classList.remove("hidden");
 }
 
+function previewPromo() {
+  const input = document.getElementById("detailPromoCode");
+  const preview = document.getElementById("promoPreview");
+  const durationEl = document.getElementById("bookingDuration");
+  if (!input || !preview) return;
+
+  const code = input.value.trim();
+  if (!code) { preview.style.display = "none"; return; }
+
+  const promo = getActivePromo(code);
+  if (!promo) {
+    preview.style.display = "block";
+    preview.style.background = "rgba(239,68,68,0.1)";
+    preview.style.borderColor = "rgba(239,68,68,0.3)";
+    preview.style.color = "var(--red)";
+    preview.textContent = "Invalid or expired promo code.";
+    return;
+  }
+
+  preview.style.display = "block";
+  preview.style.background = "rgba(16,185,129,0.1)";
+  preview.style.borderColor = "rgba(16,185,129,0.3)";
+  preview.style.color = "var(--green)";
+  preview.textContent = "✓ Promo applied: " + (promo.type === "percent" ? promo.value + "% OFF" : "₱" + promo.value.toLocaleString() + " OFF");
+
+  // Re-trigger duration update to show discounted estimate
+  updateBookingDuration();
+}
+
 function selectPayment(label, method) {
   document.querySelectorAll(".payment-option").forEach(function(el) {
     el.classList.remove("selected");
@@ -388,6 +432,205 @@ function selectPayment(label, method) {
   label.classList.add("selected");
   var radio = label.querySelector("input[type=radio]");
   if (radio) radio.checked = true;
+}
+
+// ============================================================
+// PROMO / DISCOUNT SYSTEM
+// ============================================================
+let promos = [];
+
+function savePromos() {
+  localStorage.setItem("hotelPromos", JSON.stringify(promos));
+}
+
+function loadPromos() {
+  try {
+    const raw = localStorage.getItem("hotelPromos");
+    if (raw) promos = JSON.parse(raw);
+  } catch(e) { promos = []; }
+}
+
+function getActivePromo(code) {
+  if (!code) return null;
+  const now = new Date();
+  return promos.find(function(p) {
+    return p.code.toUpperCase() === code.toUpperCase() &&
+           p.active &&
+           new Date(p.expiry) >= now;
+  }) || null;
+}
+
+function applyPromoDiscount(totalAmount, promoCode) {
+  const promo = getActivePromo(promoCode);
+  if (!promo) return { discount: 0, final: totalAmount, promo: null };
+  const discount = promo.type === "percent"
+    ? Math.round(totalAmount * promo.value / 100)
+    : Math.min(promo.value, totalAmount);
+  return { discount: discount, final: totalAmount - discount, promo: promo };
+}
+
+function showPromoModal() {
+  const modal = document.getElementById("promoModal");
+  renderPromoList();
+  modal.classList.remove("hidden");
+}
+
+function closePromoModal() {
+  document.getElementById("promoModal").classList.add("hidden");
+}
+
+function renderPromoList() {
+  const list = document.getElementById("promoList");
+  if (!promos.length) {
+    list.innerHTML = '<div class="empty-state">No promos created yet.</div>';
+    return;
+  }
+  list.innerHTML = promos.map(function(p, i) {
+    const expired = new Date(p.expiry) < new Date();
+    return '<div class="promo-item' + (expired ? ' promo-expired' : '') + '">' +
+      '<div>' +
+      '<span class="promo-code">' + p.code + '</span>' +
+      '<span class="promo-badge">' + (p.type === "percent" ? p.value + "% OFF" : "₱" + p.value.toLocaleString() + " OFF") + '</span>' +
+      (expired ? '<span class="promo-tag-expired">Expired</span>' : (p.active ? '<span class="promo-tag-active">Active</span>' : '<span class="promo-tag-inactive">Inactive</span>')) +
+      '</div>' +
+      '<div class="promo-meta">Expires: ' + p.expiry + '</div>' +
+      '<div class="promo-actions">' +
+      '<button onclick="togglePromo(' + i + ')" class="promo-toggle-btn">' + (p.active ? 'Deactivate' : 'Activate') + '</button>' +
+      '<button onclick="deletePromo(' + i + ')" class="promo-del-btn">Delete</button>' +
+      '</div>' +
+      '</div>';
+  }).join("");
+}
+
+function addPromo() {
+  const code = document.getElementById("promoCode").value.trim().toUpperCase();
+  const type = document.getElementById("promoType").value;
+  const value = Number(document.getElementById("promoValue").value);
+  const expiry = document.getElementById("promoExpiry").value;
+
+  if (!code || !value || !expiry) { alert("Please fill in all promo fields."); return; }
+  if (promos.some(function(p) { return p.code === code; })) { alert("Promo code already exists."); return; }
+  if (type === "percent" && (value <= 0 || value > 100)) { alert("Percent discount must be 1–100."); return; }
+
+  promos.push({ code: code, type: type, value: value, expiry: expiry, active: true });
+  savePromos();
+  renderPromoList();
+  document.getElementById("promoCode").value = "";
+  document.getElementById("promoValue").value = "";
+  document.getElementById("promoExpiry").value = "";
+  alert("Promo " + code + " created!");
+}
+
+function togglePromo(i) {
+  promos[i].active = !promos[i].active;
+  savePromos();
+  renderPromoList();
+}
+
+function deletePromo(i) {
+  if (!confirm("Delete promo " + promos[i].code + "?")) return;
+  promos.splice(i, 1);
+  savePromos();
+  renderPromoList();
+}
+
+// ============================================================
+// MONTHLY INCOME REPORT
+// ============================================================
+function showReportsModal() {
+  const modal = document.getElementById("reportsModal");
+  renderMonthlyReport();
+  modal.classList.remove("hidden");
+}
+
+function closeReportsModal() {
+  document.getElementById("reportsModal").classList.add("hidden");
+}
+
+function renderMonthlyReport() {
+  const container = document.getElementById("monthlyReportContent");
+  const checkedOut = bookingHistory.filter(function(e) { return e.type === "checked-out"; });
+
+  if (!checkedOut.length) {
+    container.innerHTML = '<div class="empty-state">No checkout history yet.</div>';
+    return;
+  }
+
+  // Group by month
+  const monthly = {};
+  checkedOut.forEach(function(e) {
+    const d = new Date(e.createdAt);
+    const key = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+    const label = d.toLocaleString("en-PH", { month: "long", year: "numeric" });
+    if (!monthly[key]) monthly[key] = { label: label, total: 0, count: 0, refunds: 0 };
+    monthly[key].total += Number(e.chargedAmount || 0);
+    monthly[key].count++;
+  });
+
+  // Add refunds from cancelled
+  bookingHistory.filter(function(e) { return e.type === "cancelled" && e.refundAmount; }).forEach(function(e) {
+    const d = new Date(e.createdAt);
+    const key = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+    if (monthly[key]) monthly[key].refunds += Number(e.refundAmount || 0);
+  });
+
+  const sorted = Object.keys(monthly).sort().reverse();
+  const grandTotal = sorted.reduce(function(s, k) { return s + monthly[k].total; }, 0);
+  const grandRefunds = sorted.reduce(function(s, k) { return s + monthly[k].refunds; }, 0);
+
+  container.innerHTML =
+    '<div class="report-summary">' +
+    '<div class="report-sum-card"><span>Total Revenue</span><strong>' + formatPeso(grandTotal) + '</strong></div>' +
+    '<div class="report-sum-card"><span>Total Refunds</span><strong class="report-red">' + formatPeso(grandRefunds) + '</strong></div>' +
+    '<div class="report-sum-card"><span>Net Income</span><strong class="report-green">' + formatPeso(grandTotal - grandRefunds) + '</strong></div>' +
+    '</div>' +
+    '<table class="report-table">' +
+    '<thead><tr><th>Month</th><th>Checkouts</th><th>Revenue</th><th>Refunds</th><th>Net</th></tr></thead>' +
+    '<tbody>' +
+    sorted.map(function(k) {
+      const m = monthly[k];
+      return '<tr>' +
+        '<td>' + m.label + '</td>' +
+        '<td>' + m.count + '</td>' +
+        '<td>' + formatPeso(m.total) + '</td>' +
+        '<td class="report-red">' + formatPeso(m.refunds) + '</td>' +
+        '<td class="report-green">' + formatPeso(m.total - m.refunds) + '</td>' +
+        '</tr>';
+    }).join("") +
+    '</tbody></table>';
+}
+
+// ============================================================
+// REFUND MANAGEMENT (3-day rule)
+// ============================================================
+function computeRefund(guest) {
+  const now = new Date();
+  const checkInDate = new Date(guest.checkIn + "T" + (guest.checkInTime || "14:00"));
+  const daysUntilCheckIn = Math.ceil((checkInDate - now) / (1000 * 60 * 60 * 24));
+  const nights = Math.max(1, Math.ceil(
+    (new Date(guest.checkOut + "T" + (guest.checkOutTime || "12:00")) - checkInDate) / (1000 * 60 * 60 * 24)
+  ));
+  const totalPrice = nights * getPrice(guest.room);
+  const halfPaid = guest.halfPayment || Math.round(totalPrice / 2);
+
+  // 3-day rule: cancel 3+ days before = full refund of half payment
+  // cancel 1-2 days before = 50% of half payment refunded
+  // cancel same day or after check-in = no refund
+  let refundAmount = 0;
+  let refundPolicy = "";
+
+  if (daysUntilCheckIn >= 3) {
+    refundAmount = halfPaid;
+    refundPolicy = "Full refund (" + daysUntilCheckIn + " days before check-in)";
+  } else if (daysUntilCheckIn >= 1) {
+    refundAmount = Math.round(halfPaid / 2);
+    refundPolicy = "50% refund (" + daysUntilCheckIn + " day(s) before check-in)";
+  } else {
+    refundAmount = 0;
+    refundPolicy = "No refund (same day or past check-in)";
+  }
+
+  return { refundAmount: refundAmount, refundPolicy: refundPolicy, halfPaid: halfPaid, daysUntilCheckIn: daysUntilCheckIn };
 }
 
 function reserveRoom(room) {
@@ -398,8 +641,9 @@ function reserveRoom(room) {
   const checkInTimeField = document.getElementById("detailCheckInTime");
   const checkOutField = document.getElementById("detailCheckOut");
   const checkOutTimeField = document.getElementById("detailCheckOutTime");
-
   const paymentRadio = document.querySelector('input[name="paymentMethod"]:checked');
+  const promoInput = document.getElementById("detailPromoCode");
+  const promoCode = promoInput ? promoInput.value.trim() : "";
 
   if (!nameField || !nameField.value.trim() || !phoneField || !phoneField.value.trim() ||
       !emailField || !emailField.value.trim() || !checkInField || !checkInField.value ||
@@ -419,6 +663,36 @@ function reserveRoom(room) {
   if (end <= start) { alert("Check-out must be after check-in"); return; }
   if (getGuest(room)) { alert("This room already has an active reservation"); return; }
 
+  // Calculate nights and total
+  const nights = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
+  const baseTotal = nights * getPrice(room);
+
+  // Apply promo if any
+  let promoResult = { discount: 0, final: baseTotal, promo: null };
+  if (promoCode) {
+    promoResult = applyPromoDiscount(baseTotal, promoCode);
+    if (!promoResult.promo) {
+      alert("Invalid or expired promo code.");
+      return;
+    }
+  }
+
+  const discountedTotal = promoResult.final;
+  const halfPayment = Math.round(discountedTotal / 2);
+
+  const confirmMsg = "Reservation Summary:\n\n" +
+    "Room " + room + " - " + getType(room) + "\n" +
+    "Duration: " + nights + " night(s)\n" +
+    "Base Total: " + formatPeso(baseTotal) + "\n" +
+    (promoResult.discount > 0 ? "Promo Discount: -" + formatPeso(promoResult.discount) + "\n" : "") +
+    "Total After Discount: " + formatPeso(discountedTotal) + "\n\n" +
+    "HALF PAYMENT DUE NOW: " + formatPeso(halfPayment) + "\n" +
+    "Remaining Balance: " + formatPeso(discountedTotal - halfPayment) + "\n\n" +
+    "Payment via: " + paymentRadio.value.toUpperCase() + "\n\n" +
+    "Confirm reservation?";
+
+  if (!confirm(confirmMsg)) return;
+
   guests.push({
     id: Date.now(),
     name: nameField.value.trim(),
@@ -430,15 +704,70 @@ function reserveRoom(room) {
     checkOut: checkOutField.value,
     checkOutTime: checkOutTimeField.value,
     paymentMethod: paymentRadio.value,
+    promoCode: promoCode || null,
+    discount: promoResult.discount,
+    totalAmount: discountedTotal,
+    halfPayment: halfPayment,
+    balanceDue: discountedTotal - halfPayment,
+    nights: nights,
     createdAt: new Date().toISOString()
   });
 
   saveState();
-  alert("Reservation successful!");
+  alert("Reservation confirmed!\n\nHalf payment of " + formatPeso(halfPayment) + " collected via " + paymentRadio.value.toUpperCase() + ".\nRemaining balance of " + formatPeso(discountedTotal - halfPayment) + " due at checkout.");
   closeRoomDetailsModal();
   render();
   update();
   renderRooms();
+}
+
+function updateEditSummary(room) {
+  const checkInEl  = document.getElementById("editCheckIn");
+  const checkOutEl = document.getElementById("editCheckOut");
+  const summaryEl  = document.getElementById("editPriceSummary");
+  if (!checkInEl || !checkOutEl || !summaryEl) return;
+
+  const checkIn  = checkInEl.value;
+  const checkOut = checkOutEl.value;
+
+  if (!checkIn || !checkOut) {
+    summaryEl.innerHTML = '';
+    return;
+  }
+
+  const start = new Date(checkIn + "T14:00");
+  const end   = new Date(checkOut + "T12:00");
+
+  if (isNaN(start.getTime()) || isNaN(end.getTime()) || end <= start) {
+    summaryEl.innerHTML = '<div class="edit-summary-error">⚠ Check-out must be after check-in</div>';
+    return;
+  }
+
+  const nights        = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
+  const pricePerNight = getPrice(room);
+  const newTotal      = nights * pricePerNight;
+  const newHalfPayment = Math.round(newTotal / 2);
+
+  // Get original booking data
+  const guest         = getGuest(room);
+  const origTotal     = guest ? (guest.totalAmount || (guest.nights || 1) * pricePerNight) : newTotal;
+  const oldHalfPaid   = guest ? (guest.halfPayment || Math.round(origTotal / 2)) : Math.round(origTotal / 2);
+  const additionalHalf = Math.max(0, newHalfPayment - oldHalfPaid);
+  const newBalance    = newTotal - newHalfPayment;
+  const isExtension   = nights > (guest ? (guest.nights || 1) : 1);
+  const isShorter     = nights < (guest ? (guest.nights || 1) : 1);
+
+  summaryEl.innerHTML =
+    '<div class="edit-summary">' +
+    '<div class="edit-summary-row"><span>Duration</span><strong>' + nights + ' night(s)</strong></div>' +
+    '<div class="edit-summary-row"><span>Rate</span><strong>' + formatPeso(pricePerNight) + ' / night</strong></div>' +
+    '<div class="edit-summary-row"><span>New Total</span><strong>' + formatPeso(newTotal) + '</strong></div>' +
+    '<div class="edit-summary-row"><span>New Half Payment (50%)</span><strong>' + formatPeso(newHalfPayment) + '</strong></div>' +
+    '<div class="edit-summary-row"><span>Previously Paid</span><strong style="color:var(--green)">' + formatPeso(oldHalfPaid) + ' ✓</strong></div>' +
+    (additionalHalf > 0 ? '<div class="edit-summary-row edit-summary-highlight"><span>Additional Half Due Now</span><strong style="color:var(--gold)">+' + formatPeso(additionalHalf) + '</strong></div>' : '') +
+    (isShorter ? '<div class="edit-summary-row edit-summary-highlight"><span>Reduced Total</span><strong style="color:var(--teal)">-' + formatPeso(origTotal - newTotal) + '</strong></div>' : '') +
+    '<div class="edit-summary-row edit-summary-total"><span>Balance Due at Checkout</span><strong>' + formatPeso(newBalance) + '</strong></div>' +
+    '</div>';
 }
 
 function startEdit(room) {
@@ -455,14 +784,14 @@ function cancelEdit() {
 }
 
 function updateReservation(room) {
-  const guest = guests.find((item) => item.room === room);
+  const guest = guests.find(function(item) { return item.room === room; });
   if (!guest) return;
 
-  const newName = document.getElementById("editName").value.trim();
-  const newPhone = document.getElementById("editPhone").value.trim();
-  const newEmail = document.getElementById("editEmail").value.trim();
+  const newName    = document.getElementById("editName").value.trim();
+  const newPhone   = document.getElementById("editPhone").value.trim();
+  const newEmail   = document.getElementById("editEmail").value.trim();
   const newCheckIn = document.getElementById("editCheckIn").value;
-  const newCheckOut = document.getElementById("editCheckOut").value;
+  const newCheckOut= document.getElementById("editCheckOut").value;
 
   if (!newName || !newPhone || !newEmail || !newCheckIn || !newCheckOut) {
     alert("Please fill in all fields"); return;
@@ -471,16 +800,51 @@ function updateReservation(room) {
     alert("Check-out must be after check-in"); return;
   }
 
-  guest.name = newName;
-  guest.phone = newPhone;
-  guest.email = newEmail;
-  guest.checkIn = newCheckIn;
-  guest.checkOut = newCheckOut;
+  // Recalculate pricing based on new dates
+  const start  = new Date(newCheckIn + "T14:00");
+  const end    = new Date(newCheckOut + "T12:00");
+  const newNights     = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
+  const pricePerNight = getPrice(room);
+  const newTotal      = newNights * pricePerNight;
+  const newHalfPayment = Math.round(newTotal / 2);           // always 50% of new total
+  const oldHalfPaid   = guest.halfPayment || Math.round((guest.totalAmount || newTotal) / 2);
+  const additionalHalf = Math.max(0, newHalfPayment - oldHalfPaid); // extra half due now
+  const newBalance    = newTotal - newHalfPayment;           // remaining 50% at checkout
 
-  isEditing = false;
+  let confirmMsg = "Update reservation for " + newName + "?\n\n" +
+    "New Duration: " + newNights + " night(s)\n" +
+    "New Total: " + formatPeso(newTotal) + "\n\n" +
+    "New Half Payment (50%): " + formatPeso(newHalfPayment) + "\n" +
+    "Previously Paid: " + formatPeso(oldHalfPaid) + "\n";
+
+  if (additionalHalf > 0) {
+    confirmMsg += "Additional Half Payment Due Now: " + formatPeso(additionalHalf) + "\n";
+  }
+
+  confirmMsg += "Balance Due at Checkout: " + formatPeso(newBalance);
+
+  if (!confirm(confirmMsg)) return;
+
+  guest.name        = newName;
+  guest.phone       = newPhone;
+  guest.email       = newEmail;
+  guest.checkIn     = newCheckIn;
+  guest.checkOut    = newCheckOut;
+  guest.nights      = newNights;
+  guest.totalAmount = newTotal;
+  guest.halfPayment = newHalfPayment;   // updated to 50% of new total
+  guest.balanceDue  = newBalance;
+
+  isEditing   = false;
   editingRoom = null;
   saveState();
-  alert("Reservation updated successfully!");
+
+  if (additionalHalf > 0) {
+    alert("Reservation updated!\n\nAdditional half payment of " + formatPeso(additionalHalf) + " collected.\nBalance due at checkout: " + formatPeso(newBalance));
+  } else {
+    alert("Reservation updated!\nBalance due at checkout: " + formatPeso(newBalance));
+  }
+
   render();
   update();
   renderRooms();
@@ -490,7 +854,15 @@ function updateReservation(room) {
 function cancelReservation(room) {
   const guest = getGuest(room);
   if (!guest) return;
-  if (!confirm("Are you sure you want to cancel this reservation?")) return;
+
+  const refund = computeRefund(guest);
+  const confirmMsg = "Cancel Reservation for " + guest.name + "?\n\n" +
+    "Refund Policy:\n" + refund.refundPolicy + "\n\n" +
+    "Half Payment Paid: " + formatPeso(refund.halfPaid) + "\n" +
+    "Refund Amount: " + formatPeso(refund.refundAmount) + "\n\n" +
+    "Proceed with cancellation?";
+
+  if (!confirm(confirmMsg)) return;
 
   bookingHistory.unshift({
     id: "history-" + Date.now(),
@@ -499,14 +871,23 @@ function cancelReservation(room) {
     room: guest.room,
     roomType: getType(guest.room),
     chargedAmount: 0,
+    refundAmount: refund.refundAmount,
+    refundPolicy: refund.refundPolicy,
+    halfPaid: refund.halfPaid,
     checkIn: guest.checkIn,
     checkOut: guest.checkOut,
     createdAt: new Date().toISOString()
   });
 
-  guests = guests.filter((item) => item.room !== room);
+  guests = guests.filter(function(item) { return item.room !== room; });
   saveState();
-  alert("Reservation cancelled!");
+
+  if (refund.refundAmount > 0) {
+    alert("Reservation cancelled.\n\nRefund of " + formatPeso(refund.refundAmount) + " will be processed to guest's " + (guest.paymentMethod || "payment method").toUpperCase() + ".\n\n" + refund.refundPolicy);
+  } else {
+    alert("Reservation cancelled.\n\nNo refund applicable.\n" + refund.refundPolicy);
+  }
+
   render();
   update();
   renderRooms();
@@ -614,17 +995,20 @@ function closeBulkModal() {
 
 function showReceiptModal() {
   if (!lastReceipt) { alert("No recent receipt available"); return; }
+  const r = lastReceipt;
   receiptContent.innerHTML =
     '<div class="receipt-grid">' +
-    '<p><strong>Guest:</strong> ' + lastReceipt.guestName + '</p>' +
-    '<p><strong>Room:</strong> ' + lastReceipt.room + '</p>' +
-    '<p><strong>Room Type:</strong> ' + lastReceipt.roomType + '</p>' +
-    '<p><strong>Stay:</strong> ' + lastReceipt.nights + ' night(s)</p>' +
-    '<p><strong>Rate:</strong> ' + formatPeso(lastReceipt.pricePerNight) + ' / night</p>' +
-    '<p><strong>Total:</strong> ' + formatPeso(lastReceipt.chargedAmount) + '</p>' +
-    '<p><strong>Payment:</strong> ' + (lastReceipt.paymentMethod ? lastReceipt.paymentMethod.toUpperCase() : 'N/A') + '</p>' +
-    '<p><strong>Check-in:</strong> ' + lastReceipt.checkIn + '</p>' +
-    '<p><strong>Check-out:</strong> ' + lastReceipt.checkOut + '</p>' +
+    '<p><strong>Guest:</strong> ' + r.guestName + '</p>' +
+    '<p><strong>Room:</strong> ' + r.room + ' (' + r.roomType + ')</p>' +
+    '<p><strong>Check-in:</strong> ' + r.checkIn + '</p>' +
+    '<p><strong>Check-out:</strong> ' + r.checkOut + '</p>' +
+    '<p><strong>Stay:</strong> ' + r.nights + ' night(s)</p>' +
+    '<p><strong>Rate:</strong> ' + formatPeso(r.pricePerNight) + ' / night</p>' +
+    (r.discount > 0 ? '<p><strong>Promo (' + (r.promoCode || '') + '):</strong> <span style="color:var(--green)">-' + formatPeso(r.discount) + '</span></p>' : '') +
+    '<p><strong>Total:</strong> ' + formatPeso(r.chargedAmount) + '</p>' +
+    '<p><strong>Half Payment:</strong> <span style="color:var(--green)">' + formatPeso(r.halfPayment) + ' ✓ Paid</span></p>' +
+    '<p><strong>Balance Collected:</strong> ' + formatPeso(r.balanceDue) + '</p>' +
+    '<p><strong>Payment via:</strong> ' + (r.paymentMethod ? r.paymentMethod.toUpperCase() : 'N/A') + '</p>' +
     '</div>';
   receiptModal.classList.remove("hidden");
 }
@@ -636,15 +1020,26 @@ function closeReceiptModal() {
 function buildReceipt(guest) {
   const start = new Date(guest.checkIn + "T" + (guest.checkInTime || "14:00"));
   const end = new Date();
-  const nights = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
+  const nights = guest.nights || Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
   const pricePerNight = getPrice(guest.room);
+  const baseTotal = nights * pricePerNight;
+  const discount = guest.discount || 0;
+  const totalAmount = guest.totalAmount || (baseTotal - discount);
+  const halfPayment = guest.halfPayment || Math.round(totalAmount / 2);
+  const balanceDue = totalAmount - halfPayment;
+
   return {
     guestName: guest.name,
     room: guest.room,
     roomType: getType(guest.room),
     nights: nights,
     pricePerNight: pricePerNight,
-    chargedAmount: nights * pricePerNight,
+    baseTotal: baseTotal,
+    discount: discount,
+    promoCode: guest.promoCode || null,
+    chargedAmount: totalAmount,
+    halfPayment: halfPayment,
+    balanceDue: balanceDue,
     paymentMethod: guest.paymentMethod || null,
     checkIn: guest.checkIn + " " + (guest.checkInTime || "14:00"),
     checkOut: end.toLocaleString()
@@ -877,6 +1272,7 @@ function attachFilterEvents() {
 function init() {
   initTheme();
   loadState();
+  loadPromos();
   attachFilterEvents();
   updateAuthMode();
   syncWelcome();

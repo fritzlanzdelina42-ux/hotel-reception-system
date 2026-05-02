@@ -187,6 +187,8 @@
       <button onclick="showRoomCategory('low')">🛏 Standard</button>
       <div class="sidebar-label">Management</div>
       <button onclick="showBulkCancelModal()">⚙ Bulk Actions</button>
+      <button onclick="showReportsModal()">📊 Reports</button>
+      <button onclick="showPromoModal()">🎟 Promos</button>
       <div class="sidebar-spacer"></div>
       <button class="sidebar-back-btn" onclick="showLanding()">&#8592;</button>
       <button onclick="logout()">🚪 Logout</button>
@@ -283,6 +285,8 @@
       <button onclick="showRoomCategory('low')">🛏 Standard</button>
       <div class="sidebar-label">Management</div>
       <button onclick="showBulkCancelModal()">⚙ Bulk Actions</button>
+      <button onclick="showReportsModal()">📊 Reports</button>
+      <button onclick="showPromoModal()">🎟 Promos</button>
       <div class="sidebar-spacer"></div>
       <button class="sidebar-back-btn" onclick="showLanding()">&#8592;</button>
       <button onclick="logout()">🚪 Logout</button>
@@ -374,6 +378,62 @@
       <div id="receiptContent"></div>
       <div class="board-actions">
         <button onclick="closeReceiptModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reports Modal -->
+  <div id="reportsModal" class="modal hidden">
+    <div class="modal-content" style="width:min(700px,100%)">
+      <button class="modal-back-btn" onclick="closeReportsModal()">&#8592;</button>
+      <h3>📊 Monthly Income Report</h3>
+      <p class="modal-subtitle">Revenue breakdown by month including refunds.</p>
+      <div id="monthlyReportContent"></div>
+      <div class="board-actions">
+        <button onclick="closeReportsModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Promo Modal -->
+  <div id="promoModal" class="modal hidden">
+    <div class="modal-content" style="width:min(560px,100%)">
+      <button class="modal-back-btn" onclick="closePromoModal()">&#8592;</button>
+      <h3>🎟 Promo &amp; Discount Manager</h3>
+      <p class="modal-subtitle">Create and manage discount codes for guests.</p>
+
+      <div class="promo-form">
+        <div class="info-grid">
+          <div>
+            <label style="font-size:0.75rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:4px">Promo Code</label>
+            <input id="promoCode" placeholder="e.g. SUMMER25" style="text-transform:uppercase">
+          </div>
+          <div>
+            <label style="font-size:0.75rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:4px">Discount Type</label>
+            <select id="promoType">
+              <option value="percent">Percentage (%)</option>
+              <option value="fixed">Fixed Amount (₱)</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:0.75rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:4px">Value</label>
+            <input id="promoValue" type="number" placeholder="e.g. 20">
+          </div>
+          <div>
+            <label style="font-size:0.75rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:4px">Expiry Date</label>
+            <input id="promoExpiry" type="date">
+          </div>
+        </div>
+        <button onclick="addPromo()" class="primary" style="width:100%;margin-top:4px">+ Add Promo</button>
+      </div>
+
+      <div style="margin-top:20px">
+        <h4 style="font-size:0.9rem;font-weight:700;color:var(--text);margin-bottom:12px">Active Promos</h4>
+        <div id="promoList"></div>
+      </div>
+
+      <div class="board-actions">
+        <button class="secondary" onclick="closePromoModal()">Close</button>
       </div>
     </div>
   </div>

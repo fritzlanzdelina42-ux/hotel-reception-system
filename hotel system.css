@@ -1116,3 +1116,172 @@ body[data-theme="light"] .lp-img-chip {
 .payment-icon { font-size: 1.2rem; line-height: 1; }
 .payment-name { font-size: 0.92rem; font-weight: 700; }
 .payment-logo { display: none !important; }
+
+/* ============================================================
+   REPORTS & PROMO STYLES
+   ============================================================ */
+
+/* Report summary cards */
+.report-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.report-sum-card {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-md);
+  padding: 16px;
+  text-align: center;
+}
+.report-sum-card span {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+.report-sum-card strong {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--text);
+}
+.report-green { color: var(--green) !important; }
+.report-red   { color: var(--red) !important; }
+
+/* Report table */
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+}
+.report-table th {
+  text-align: left;
+  padding: 10px 12px;
+  background: var(--surface2);
+  color: var(--text3);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+  border-bottom: 1px solid var(--border2);
+}
+.report-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text2);
+}
+.report-table tr:last-child td { border-bottom: none; }
+.report-table tr:hover td { background: var(--surface2); }
+
+/* Promo items */
+.promo-form { background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--r-md); padding: 16px; }
+
+.promo-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-md);
+  margin-bottom: 8px;
+}
+.promo-item.promo-expired { opacity: 0.55; }
+
+.promo-code {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: 1px;
+  margin-right: 10px;
+}
+.promo-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 99px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: rgba(59,130,246,0.15);
+  color: var(--accent);
+  margin-right: 6px;
+}
+.promo-tag-active   { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 0.7rem; font-weight: 700; background: rgba(16,185,129,0.15); color: var(--green); }
+.promo-tag-inactive { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 0.7rem; font-weight: 700; background: rgba(245,158,11,0.15); color: var(--gold); }
+.promo-tag-expired  { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 0.7rem; font-weight: 700; background: rgba(239,68,68,0.15); color: var(--red); }
+
+.promo-meta { font-size: 0.78rem; color: var(--text3); }
+
+.promo-actions { display: flex; gap: 8px; margin-top: 4px; }
+.promo-toggle-btn {
+  padding: 5px 12px; font-size: 0.78rem; font-weight: 600;
+  background: var(--surface3); border: 1px solid var(--border2);
+  border-radius: var(--r-sm); color: var(--text2); cursor: pointer;
+  box-shadow: none; transition: all var(--ease);
+}
+.promo-toggle-btn:hover { border-color: var(--accent); color: var(--accent); transform: none; }
+.promo-del-btn {
+  padding: 5px 12px; font-size: 0.78rem; font-weight: 600;
+  background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25);
+  border-radius: var(--r-sm); color: var(--red); cursor: pointer;
+  box-shadow: none; transition: all var(--ease);
+}
+.promo-del-btn:hover { background: rgba(239,68,68,0.2); transform: none; }
+
+@media (max-width: 600px) {
+  .report-summary { grid-template-columns: 1fr; }
+  .report-table { font-size: 0.78rem; }
+  .report-table th, .report-table td { padding: 8px; }
+}
+
+/* ============================================================
+   EDIT RESERVATION PRICE SUMMARY
+   ============================================================ */
+.edit-price-summary {
+  margin: 12px 0;
+}
+
+.edit-summary {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+
+.edit-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.86rem;
+}
+
+.edit-summary-row:last-child { border-bottom: none; }
+
+.edit-summary-row span { color: var(--text2); }
+.edit-summary-row strong { color: var(--text); font-weight: 700; }
+
+.edit-summary-highlight {
+  background: rgba(245,158,11,0.06);
+}
+
+.edit-summary-total {
+  background: var(--surface3);
+  font-weight: 700;
+}
+
+.edit-summary-total span { color: var(--text); font-weight: 700; }
+.edit-summary-total strong { font-size: 1rem; color: var(--accent); }
+
+.edit-summary-error {
+  padding: 10px 14px;
+  background: rgba(239,68,68,0.08);
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: var(--r-sm);
+  color: var(--red);
+  font-size: 0.84rem;
+}
